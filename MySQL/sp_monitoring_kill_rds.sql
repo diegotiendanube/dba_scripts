@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `monitoring_kill_rds`(
+CREATE PROCEDURE `sp_monitoring_kill_rds`(
 user_rds VARCHAR(150),
 duration_time INT)
 BEGIN
