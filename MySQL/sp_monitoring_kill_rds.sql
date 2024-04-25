@@ -1,4 +1,4 @@
-CREATE PROCEDURE `sp_monitoring_kill_rds`(
+CREATE  PROCEDURE `sp_monitoring_kill_rds`(
 user_rds VARCHAR(150),
 duration_time INT)
 BEGIN
@@ -38,7 +38,8 @@ SET @cur_now = 0;
 		   AND t.PROCESSLIST_USER is not null
 		   AND CASE WHEN user_rds='ALL' OR user_rds='all' THEN t.PROCESSLIST_USER NOT IN ('root','rdsadmin', 'rdsrepladmin')
 					ELSE  FIND_IN_SET (t.PROCESSLIST_USER ,user_rds) END
-		   AND t.PROCESSLIST_TIME >=duration_time;
+		   AND t.PROCESSLIST_COMMAND<>'Sleep'
+           AND t.PROCESSLIST_TIME >=duration_time;
 myloop: WHILE @cur_now < (@count_rds_kill) DO
 	DROP TEMPORARY TABLE IF EXISTS monitoring.user_rds_killed;
 	CREATE TEMPORARY TABLE monitoring.user_rds_killed 
@@ -64,7 +65,8 @@ myloop: WHILE @cur_now < (@count_rds_kill) DO
       AND t.PROCESSLIST_USER is not null
       AND CASE WHEN user_rds='ALL' OR user_rds='all' THEN t.PROCESSLIST_USER NOT IN ('root','rdsadmin', 'rdsrepladmin')
                ELSE  FIND_IN_SET (t.PROCESSLIST_USER ,user_rds) END
-	  AND t.PROCESSLIST_TIME >=duration_time
+	  AND t.PROCESSLIST_COMMAND<>'Sleep'
+      AND t.PROCESSLIST_TIME >=duration_time
        limit 1;
   
 	  SET @command_kill_code=(SELECT kill_code from monitoring.user_rds_killed limit 1);
@@ -88,7 +90,8 @@ myloop: WHILE @cur_now < (@count_rds_kill) DO
 		 AND t.PROCESSLIST_USER is not null
 		 AND CASE WHEN user_rds='ALL' OR user_rds='all' THEN t.PROCESSLIST_USER NOT IN ('root','rdsadmin', 'rdsrepladmin')
 				  ELSE  FIND_IN_SET (t.PROCESSLIST_USER ,user_rds) END
-		 AND t.PROCESSLIST_TIME >=duration_time;
+		 AND t.PROCESSLIST_COMMAND<>'Sleep'
+         AND t.PROCESSLIST_TIME >=duration_time;
 	IF @cur_now = (@count_rds_kill) THEN 		   
 			LEAVE myloop; 
 		  END IF;
