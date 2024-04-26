@@ -1,4 +1,4 @@
-CREATE  PROCEDURE `sp_monitoring_kill_rds`(
+CREATE PROCEDURE `sp_monitoring_kill_rds`(
 user_rds VARCHAR(150),
 duration_time INT)
 BEGIN
@@ -27,7 +27,25 @@ DECLARE EXIT HANDLER FOR SQLEXCEPTION
 				FROM user_rds_killed;
 	  END IF;
   END;
-         
+  
+DROP TEMPORARY TABLE IF EXISTS `monitoring`.`history_kill_rds`;
+CREATE TEMPORARY TABLE `monitoring`.`history_kill_rds` (
+  `id_kill` int NOT NULL AUTO_INCREMENT,
+  `execution_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `execution_status` varchar(50) DEFAULT NULL,
+  `processlist_id` int DEFAULT NULL,
+  `thread_id` int DEFAULT NULL,
+  `user_name` varchar(100) DEFAULT NULL,
+  `host_name` varchar(100) DEFAULT NULL,
+  `data_base_name` varchar(100) DEFAULT NULL,
+  `execution_time` time DEFAULT NULL,
+  `tx_query` longtext,
+  `sql_state` varchar(100) DEFAULT NULL,
+  `erro_number` varchar(10) DEFAULT NULL,
+  `text_information` varchar(200) DEFAULT NULL,
+  PRIMARY KEY (`id_kill`),
+  KEY `idx_execution_date` (`execution_date`));
+  
 SET @cur_now = 0;
 		SELECT COUNT(*)
 		  INTO @count_rds_kill
