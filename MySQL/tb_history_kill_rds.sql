@@ -1,5 +1,6 @@
-CREATE TABLE `monitoring`.`history_kill_rds` (
+CREATE TABLE aws_repository.history_kill_rds (                 
   `id_kill` int NOT NULL AUTO_INCREMENT,
+  `rds_aws_name` varchar(150) DEFAULT NULL,
   `execution_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `execution_status` varchar(50) DEFAULT NULL,
   `processlist_id` int DEFAULT NULL,
@@ -13,7 +14,7 @@ CREATE TABLE `monitoring`.`history_kill_rds` (
   `erro_number` varchar(10) DEFAULT NULL,
   `text_information` varchar(200) DEFAULT NULL,
   PRIMARY KEY (`id_kill`),
-  KEY `idx_execution_date` (`execution_date`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
-
-ALTER TABLE `monitoring`.`history_kill_rds` ADD INDEX `idx_execution_date` (`execution_date`);
+  KEY `idx_execution_date` (`execution_date`),
+  KEY `idx_rds_aws_name` (`rds_aws_name`),
+  KEY `idx_rds_aws_name_execution_date` (`rds_aws_name`,`execution_date`)
+) ENGINE=InnoDB;
