@@ -1,4 +1,4 @@
-CREATE PROCEDURE `sp_monitoring_kill_rds`(
+CREATE DEFINER=`root`@`%` PROCEDURE `sp_monitoring_kill_rds`(
 user_rds VARCHAR(150),
 duration_time INT)
 BEGIN
@@ -96,7 +96,6 @@ myloop: WHILE @cur_now < (@count_rds_kill) DO
 			  INSERT INTO monitoring.history_kill_rds ( execution_date, execution_status, processlist_id, thread_id, user_name,host_name,data_base_name,execution_time,tx_query,sql_state,erro_number,text_information)            
 			  SELECT now(),'Kill executed' as execution_status, ID, THREAD_ID, USER, HOST, DB, execution_time, tx_query,'' as sql_state, '' as erro_number, '' as text_information 
 				FROM user_rds_killed;
-             SELECT *, 'kill executado' as status from monitoring.user_rds_killed;
 			END IF;
 
 	  SELECT COUNT(*)
