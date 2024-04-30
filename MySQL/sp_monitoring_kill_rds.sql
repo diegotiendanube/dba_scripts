@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `sp_monitoring_kill_rds`(
+CREATE PROCEDURE `sp_monitoring_kill_rds`(
 user_rds VARCHAR(150),
 duration_time INT)
 BEGIN
@@ -8,29 +8,29 @@ DECLARE EXIT HANDLER FOR SQLEXCEPTION
   BEGIN
     ROLLBACK;
   	GET STACKED DIAGNOSTICS CONDITION 1  @sqlstate = RETURNED_SQLSTATE, @errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
-    INSERT INTO monitoring.history_kill_rds ( execution_date, execution_status, processlist_id, thread_id, user_name,host_name,data_base_name,execution_time,tx_query,sql_state,erro_number,text_information)
-         VALUES (NOW(), 'FAILURE','','','','','','','', @sqlstate, @errno, @text);
+    INSERT INTO monitoring.history_kill_rds ( rds_aws_name,execution_date, execution_status, processlist_id, thread_id, user_name,host_name,data_base_name,execution_time,tx_query,sql_state,erro_number,text_information)
+         VALUES (@rds_rds_aws_name, NOW(), 'FAILURE','','','','','','','', @sqlstate, @errno, @text);
   END;
 
  DECLARE EXIT HANDLER FOR 1094
   BEGIN 
   ROLLBACK;
   	GET STACKED DIAGNOSTICS CONDITION 1  @sqlstate = RETURNED_SQLSTATE, @errno = MYSQL_ERRNO, @text = MESSAGE_TEXT;
-    INSERT INTO monitoring.history_kill_rds ( execution_date, execution_status, processlist_id, thread_id, user_name,host_name,data_base_name,execution_time,tx_query,sql_state,erro_number,text_information)
-         VALUES (NOW(), 'FAILURE','','','','','','','', @sqlstate, @errno, @text);
+    INSERT INTO monitoring.history_kill_rds (rds_aws_name,execution_date, execution_status, processlist_id, thread_id, user_name,host_name,data_base_name,execution_time,tx_query,sql_state,erro_number,text_information)
+         VALUES (@rds_rds_aws_name, NOW(), 'FAILURE','','','','','','','', @sqlstate, @errno, @text);
 	  IF @command_kill_code IS NOT NULL THEN
 		  PREPARE QUERY FROM @command_kill_code;
 		  EXECUTE QUERY;
 		  DEALLOCATE PREPARE QUERY;
-			  INSERT INTO monitoring.history_kill_rds ( execution_date, execution_status, processlist_id, thread_id, user_name,host_name,data_base_name,execution_time,tx_query,sql_state,erro_number,text_information)            
-			  SELECT now(),'Kill executed' as execution_status, ID, THREAD_ID, USER, HOST, DB, execution_time, tx_query,'' as sql_state, '' as erro_number, '' as text_information 
+			  INSERT INTO monitoring.history_kill_rds ( rds_aws_name,execution_date, execution_status, processlist_id, thread_id, user_name,host_name,data_base_name,execution_time,tx_query,sql_state,erro_number,text_information)            
+			  SELECT @rds_rds_aws_name as rds_aws_name,now(),'Kill executed' as execution_status, ID, THREAD_ID, USER, HOST, DB, execution_time, tx_query,'' as sql_state, '' as erro_number, '' as text_information 
 				FROM user_rds_killed;
 	  END IF;
   END;
-  
+SET @rds_rds_aws_name = 'stagin_mysql';
 DROP TEMPORARY TABLE IF EXISTS `monitoring`.`history_kill_rds`;
 CREATE TEMPORARY TABLE `monitoring`.`history_kill_rds` (
-  `id_kill` int NOT NULL AUTO_INCREMENT,
+  `rds_aws_name` varchar(150) DEFAULT NULL,
   `execution_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `execution_status` varchar(50) DEFAULT NULL,
   `processlist_id` int DEFAULT NULL,
@@ -42,9 +42,7 @@ CREATE TEMPORARY TABLE `monitoring`.`history_kill_rds` (
   `tx_query` longtext,
   `sql_state` varchar(100) DEFAULT NULL,
   `erro_number` varchar(10) DEFAULT NULL,
-  `text_information` varchar(200) DEFAULT NULL,
-  PRIMARY KEY (`id_kill`),
-  KEY `idx_execution_date` (`execution_date`));
+  `text_information` varchar(200) DEFAULT NULL);
   
 SET @cur_now = 0;
 		SELECT COUNT(*)
@@ -93,8 +91,8 @@ myloop: WHILE @cur_now < (@count_rds_kill) DO
 		  PREPARE QUERY FROM @command_kill_code;
 		  EXECUTE QUERY;
 		  DEALLOCATE PREPARE QUERY;
-			  INSERT INTO monitoring.history_kill_rds ( execution_date, execution_status, processlist_id, thread_id, user_name,host_name,data_base_name,execution_time,tx_query,sql_state,erro_number,text_information)            
-			  SELECT now(),'Kill executed' as execution_status, ID, THREAD_ID, USER, HOST, DB, execution_time, tx_query,'' as sql_state, '' as erro_number, '' as text_information 
+			  INSERT INTO monitoring.history_kill_rds ( rds_aws_name,execution_date, execution_status, processlist_id, thread_id, user_name,host_name,data_base_name,execution_time,tx_query,sql_state,erro_number,text_information)            
+			  SELECT @rds_rds_aws_name as rds_aws_name,now(),'Kill executed' as execution_status, ID, THREAD_ID, USER, HOST, DB, execution_time, tx_query,'' as sql_state, '' as erro_number, '' as text_information 
 				FROM user_rds_killed;
 			END IF;
 
